@@ -41,4 +41,4 @@ pi install git:github.com/thoreinstein/pi-obsidian
 
 ## Vault setup
 
-First use: ask pi to set your vault (`obsidian_set_vault` tool or the `vault` skill). The path is persisted to `~/.config/obsidian-mcp/config.json` and shared with the old gemini/claude plugins' config fallback.
+First use: ask pi to set your vault (`obsidian_set_vault` tool or the `vault` skill). The path is persisted to `~/.config/obsidian-mcp/config.json`.
