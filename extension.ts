@@ -21,7 +21,8 @@ const REINDEX_TOOLS = new Set([
 
 function serverRoot(): string {
   return (
-    process.env.OBSIDIAN_MCP_ROOT || join(homedir(), "src/thoreinstein/obsidian-mcp")
+    process.env.OBSIDIAN_MCP_ROOT ||
+    join(homedir(), "src/thoreinstein/obsidian-mcp")
   );
 }
 
@@ -57,13 +58,11 @@ function formatHookLine(out: string | null): string | undefined {
 export default function (pi: ExtensionAPI) {
   // SessionStart: report vault status, run incremental reindex for
   // edits made outside MCP tools.
-  pi.on("session_start", async (_event, ctx) => {
-    const out = await mcp("obsidian_rag_index");
-    if (!out) return;
-    const line = formatHookLine(out);
-    if (line && ctx.hasUI) {
-      ctx.ui.notify(line, "info");
-    }
+  pi.on("session_start", (_event, ctx) => {
+    void mcp("obsidian_rag_index").then((out) => {
+      const line = formatHookLine(out);
+      if (line && ctx.hasUI) ctx.ui.notify(line, "info");
+    });
   });
 
   // PreToolUse: validate frontmatter against the vault schema before
@@ -84,7 +83,10 @@ export default function (pi: ExtensionAPI) {
     const out = await mcp("obsidian_rag_index", [
       "--hook",
       JSON.stringify({
-        tool_input: { file_path: input.file_path, vault_path: input.vault_path },
+        tool_input: {
+          file_path: input.file_path,
+          vault_path: input.vault_path,
+        },
       }),
     ]);
     const line = formatHookLine(out);
