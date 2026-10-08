@@ -1,7 +1,7 @@
 {
   "name": "pi-obsidian",
   "version": "0.1.0",
-  "description": "Pi extension for the obsidian-mcp server: skills, vault agents, session reindex hooks",
+  "description": "Pi extension for the obsidian-mcp server: vault agents, session reindex hooks",
   "type": "module",
   "license": "MIT",
   "author": "thoreinstein",
@@ -19,7 +19,6 @@
   ],
   "files": [
     "extension.ts",
-    "skills",
     "agents",
     "README.md",
     "LICENSE"
@@ -27,9 +26,6 @@
   "pi": {
     "extensions": [
       "./extension.ts"
-    ],
-    "skills": [
-      "./skills"
     ],
     "subagents": {
       "agents": [
