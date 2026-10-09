@@ -19,6 +19,8 @@ const REINDEX_TOOLS = new Set([
   "obsidian_move_note",
 ]);
 
+const SESSION_START_INDEX_DELAY_MS = 30_000;
+
 function serverRoot(): string {
   return (
     process.env.OBSIDIAN_MCP_ROOT ||
@@ -31,11 +33,16 @@ function serverBin(): string {
 }
 
 /** Run a one-shot tool against the obsidian-mcp server CLI. */
-async function mcp(tool: string, args: string[] = []): Promise<string | null> {
+async function mcp(
+  tool: string,
+  args: string[] = [],
+  lowPriority = false,
+): Promise<string | null> {
+  const cmd = [serverBin(), tool, ...args];
   try {
-    const { stdout, stderr } = await run("node", [serverBin(), tool, ...args], {
-      timeout: 120_000,
-    });
+    const { stdout, stderr } = lowPriority
+      ? await run("nice", ["-n", "19", "node", ...cmd], { timeout: 600_000 })
+      : await run("node", cmd, { timeout: 120_000 });
     return stdout || stderr || null;
   } catch (e: any) {
     // Exit 0 with no output is the server's silent no-op — not an error.
@@ -57,12 +64,15 @@ function formatHookLine(out: string | null): string | undefined {
 
 export default function (pi: ExtensionAPI) {
   // SessionStart: report vault status, run incremental reindex for
-  // edits made outside MCP tools.
+  // edits made outside MCP tools. Delayed and niced so a large reindex
+  // doesn't starve the session while it starts up.
   pi.on("session_start", (_event, ctx) => {
-    void mcp("obsidian_rag_index").then((out) => {
-      const line = formatHookLine(out);
-      if (line && ctx.hasUI) ctx.ui.notify(line, "info");
-    });
+    setTimeout(() => {
+      void mcp("obsidian_rag_index", [], true).then((out) => {
+        const line = formatHookLine(out);
+        if (line && ctx.hasUI) ctx.ui.notify(line, "info");
+      });
+    }, SESSION_START_INDEX_DELAY_MS).unref();
   });
 
   // PreToolUse: validate frontmatter against the vault schema before
